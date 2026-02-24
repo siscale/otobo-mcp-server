@@ -1,0 +1,15 @@
+[project]
+name = "otobo-mcp-server"
+version = "0.1.0"
+description = "MCP server for searching and retrieving OTOBO tickets"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.26.0",
+    "requests>=2.28.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

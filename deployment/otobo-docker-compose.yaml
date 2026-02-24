@@ -1,0 +1,48 @@
+
+
+services:
+
+  db:
+    image: mariadb:10.11
+    command: --max-allowed-packet=256M --innodb-log-file-size=256M
+    environment:
+      MARIADB_ROOT_PASSWORD: otobo_root
+      MARIADB_DATABASE: otobo
+    volumes:
+      - otobo_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+
+  web:
+    image: rotheross/otobo:latest-11_0
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "192.168.0.166:80:5000"
+    entrypoint: ["/opt/otobo_install/entrypoint.sh"]
+    command: ["web"]
+    environment:
+      OTOBO_RUNS_UNDER_DOCKER: "1"
+    volumes:
+      - otobo_app:/opt/otobo
+
+  daemon:
+    image: rotheross/otobo:latest-11_0
+    depends_on:
+      - web
+    entrypoint: ["/opt/otobo_install/entrypoint.sh"]
+    command: ["daemon"]
+    environment:
+      OTOBO_RUNS_UNDER_DOCKER: "1"
+    volumes:
+      - otobo_app:/opt/otobo
+
+volumes:
+  otobo_db:
+  otobo_app:

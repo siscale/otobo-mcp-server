@@ -1,0 +1,32 @@
+---
+Debugger:
+  DebugThreshold: debug
+  TestMode: '0'
+Description: REST connector for MCP server
+FrameworkVersion: 11.0.x
+Provider:
+  Operation:
+    TicketGet:
+      Description: Get ticket details
+      MappingInbound: {}
+      MappingOutbound: {}
+      Type: Ticket::TicketGet
+    TicketSearch:
+      Description: Search tickets
+      MappingInbound: {}
+      MappingOutbound: {}
+      Type: Ticket::TicketSearch
+  Transport:
+    Config:
+      MaxLength: '100000000'
+      RouteOperationMapping:
+        TicketGet:
+          RequestMethod:
+            - POST
+          Route: /TicketGet
+        TicketSearch:
+          RequestMethod:
+            - POST
+          Route: /TicketSearch
+    Type: HTTP::REST
+RemoteSystem: ''
