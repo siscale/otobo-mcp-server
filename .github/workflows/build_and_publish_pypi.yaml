@@ -1,0 +1,44 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  request-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: DenisStefanAndrei,alinmanolache,AlexCornigeanu,marian-craciunescu,marius-avram,mateibm,AndreiTudose95,smmihai,RazvanKokovicsSiscale,hutanmihai,aburnaz
+          minimum-approvals: 1
+          issue-title: "Approval needed for PyPI publish"
+          issue-body: "Please approve this workflow to publish a new version to PyPI"
+          exclude-workflow-initiator-as-approver: false
+          timeout-minutes: 120
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: request-approval
+    environment: pypi-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install uv
+
+      - run: uv build
+
+      - run: ls -la dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

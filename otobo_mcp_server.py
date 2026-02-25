@@ -12,8 +12,6 @@ Environment:
     OTOBO_SSL_VERIFY    SSL verification (default: true)
     OTOBO_TIMEOUT       HTTP timeout in seconds (default: 30)
     OTOBO_TRANSPORT     Transport: stdio, sse, streamable-http (default: stdio)
-    FASTMCP_PORT        Bind port for SSE/HTTP (default: 8000)
-    FASTMCP_HOST        Bind host for SSE/HTTP (default: 127.0.0.1)
 """
 
 import argparse
@@ -168,6 +166,16 @@ def slim_article(article: dict) -> dict:
     }
 
 
+def _apply_args():
+    parser = argparse.ArgumentParser(description="OTOBO MCP Server")
+    parser.add_argument("--transport", "-t", choices=["stdio", "sse", "streamable-http"], default=None)
+    parser.add_argument("--host", default="127.0.0.1", help="Bind host for SSE/HTTP (default: 127.0.0.1)")
+    parser.add_argument("--port", "-p", type=int, default=8000, help="Bind port for SSE/HTTP (default: 8000)")
+    return parser.parse_args()
+
+
+_cli_args = _apply_args()
+
 server = FastMCP("otobo-mcp-server")
 
 
@@ -316,27 +324,23 @@ def check_connection() -> str:
     })
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="OTOBO MCP Server")
-    parser.add_argument("--transport", "-t", choices=["stdio", "sse", "streamable-http"], default=None,
-                        help="Transport type (default: stdio, or set OTOBO_TRANSPORT)")
-    parser.add_argument("--host", default=None, help="Bind host for SSE/HTTP (default: 127.0.0.1)")
-    parser.add_argument("--port", "-p", type=int, default=None, help="Bind port for SSE/HTTP (default: 8000)")
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    transport = args.transport or cfg.transport
+    transport = _cli_args.transport or cfg.transport
+    host = _cli_args.host
+    port = _cli_args.port
 
-    if args.host:
-        os.environ["FASTMCP_HOST"] = args.host
-    if args.port:
-        os.environ["FASTMCP_PORT"] = str(args.port)
-    otobo_host = cfg.host or "(not set)"
-    log.info("Starting OTOBO MCP server: transport=%s otobo_host=%s webservice=%s", transport, otobo_host, cfg.webservice)
+    log.info("Starting OTOBO MCP server: transport=%s host=%s port=%s", transport, host, port)
 
-    server.run(transport=transport)
+    if transport == "stdio":
+        server.run(transport="stdio")
+    else:
+        import uvicorn
+
+        if transport == "sse":
+            app = server.sse_app()
+        else:
+            app = server.streamable_http_app()
+        uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
