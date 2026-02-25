@@ -1,6 +1,6 @@
 [project]
 name = "otobo-mcp-server"
-version = "0.1.0"
+version = "1.0.1"
 description = "MCP server for searching and retrieving OTOBO tickets"
 readme = "README.md"
 requires-python = ">=3.10"
